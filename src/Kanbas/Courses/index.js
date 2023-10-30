@@ -7,10 +7,10 @@ import Assignments from './Assignment'
 import AssignmentEditor from './Assignment/AssignmentEditor'
 import Grades from './Grades'
 
-function Courses() {
+function Courses({ courses }) {
   const { courseId, '*': link } = useParams()
 
-  const course = db.courses.find((course) => course._id === courseId)
+  const course = courses.find((course) => course._id === courseId)
   return (
     <div>
       <div className="align-items-center flex-row flex-fill d-none d-lg-flex justify-content-center">
@@ -52,7 +52,8 @@ function Courses() {
           <Route path="Home" element={<Home />} />
           <Route path="Modules" element={<Modules />} />
           <Route path="Assignments" element={<Assignments />} />
-          <Route path="Assignments/:assignmentId" element={<AssignmentEditor />} />
+          <Route path="Assignments/Editor" element={<AssignmentEditor />} />
+          <Route path="Assignments/Editor/:assignmentId" element={<AssignmentEditor />} />
           <Route path="Grades" element={<Grades />} />
         </Routes>
       </div>

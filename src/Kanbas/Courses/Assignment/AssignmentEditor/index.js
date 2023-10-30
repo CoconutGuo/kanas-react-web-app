@@ -1,17 +1,43 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import db from '../../../Database'
+import { useSelector, useDispatch } from 'react-redux'
+import { addAssignment, updateAssignment, selectAssignment } from '../assignmentsReducer'
 
 function AssignmentEditor() {
-  const { assignmentId } = useParams()
-  const assignment = db.assignments.find((assignment) => assignment._id === assignmentId)
+  const { courseId, assignmentId } = useParams()
+  // const assignment = db.assignments.find((assignment) => assignment._id === assignmentId) ?? {}
+  const assignments = useSelector((state) => state.assignmentsReducer.assignments)
+  const assignment = useSelector((state) => state.assignmentsReducer.assignment)
+  const dispatch = useDispatch()
 
-  const { courseId } = useParams()
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const assignment = assignments.find((assignment) => assignment._id === assignmentId) ?? {
+      title: 'New Assignment',
+      description: 'New Assignment Description',
+      dueDate: '2023-09-18',
+      availableFromDate: '2023-09-06',
+      availableUntilDate: '2023-09-18',
+      course: 'RS101',
+    }
+    console.log('🚀 ~ file: index.js:18 ~ assignment ~ assignment:', assignment)
+
+    dispatch(selectAssignment(assignment))
+  }, [assignmentId, assignments, dispatch])
+
   const handleSave = () => {
-    console.log('Actually saving assignment TBD in later assignments')
+    if (assignmentId) {
+      // updateAssignment
+      dispatch(updateAssignment(assignment))
+    } else {
+      // addAssignment
+      dispatch(addAssignment(assignment))
+    }
     navigate(`/Kanbas/Courses/${courseId}/Assignments`)
   }
+
   return (
     <div className="flex-column justify-content-center p-3 pt-0 flex-fill">
       <div className="d-flex float-end flex-nowrap align-items-center no-wrap-btn">
@@ -54,15 +80,18 @@ function AssignmentEditor() {
           placeholder="Please enter the assignment name"
           value={assignment.title}
           className="form-control mb-2"
+          onChange={(e) => dispatch(selectAssignment({ ...assignment, title: e.target.value }))}
         />
       </div>
 
       <div className="mb-3">
-        <textarea className="form-control" id="description" rows="5">
-          This assignment describes how to install the development environment for creating and working with Web applications we will be
-          developing this semester. We will add new content every week, pushing the code to a GitHub source repository, and then deploying
-          the content to a remote server hosted on Netlify.
-        </textarea>
+        <textarea
+          className="form-control"
+          // id="description"
+          rows="5"
+          value={assignment.description}
+          onChange={(e) => dispatch(selectAssignment({ ...assignment, description: e.target.value }))}
+        ></textarea>
       </div>
 
       <div className="row mb-3 justify-content-left align-items-center">
@@ -76,6 +105,69 @@ function AssignmentEditor() {
         </div>
       </div>
 
+      <div className="row mb-3 justify-content-left align-items-start">
+        <div className="col-3 text-end me-0">
+          <label htmlFor="assign-form" className="form-label mb-0 align-self-center">
+            Assign
+          </label>
+        </div>
+
+        <div className="col-6 border rounded px-3 py-3" id="assign-form">
+          {/* <label htmlFor="assign-to" className="form-label fw-bold">
+            Assign to
+          </label>
+          <input type="text" className="form-control mb-3" id="assign-to" value="Everyone" /> */}
+
+          <label htmlFor="due" className="form-label fw-bold">
+            Due
+          </label>
+          <input
+            type="date"
+            className="form-control mb-3"
+            id="due"
+            value={assignment.dueDate}
+            onChange={(e) => dispatch(selectAssignment({ ...assignment, dueDate: e.target.value }))}
+          />
+
+          <div className="row mb-3">
+            <div className="col-6 pe-1">
+              <label htmlFor="due" className="form-label fw-bold">
+                Available from
+              </label>
+              <input
+                type="date"
+                className="form-control"
+                id="due"
+                value={assignment.availableFromDate}
+                onChange={(e) => dispatch(selectAssignment({ ...assignment, availableFromDate: e.target.value }))}
+              />
+            </div>
+            <div className="col-6 ps-1">
+              <label htmlFor="due" className="form-label fw-bold">
+                Until
+              </label>
+              <input
+                type="date"
+                className="form-control"
+                id="due"
+                value={assignment.availableUntilDate}
+                onChange={(e) => dispatch(selectAssignment({ ...assignment, availableUntilDate: e.target.value }))}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* <div className="row justify-content-left align-items-start px-0 m-0">
+          <div className="col-3 text-end"></div>
+
+          <div className="col-6 border p-0 rounded-bottom justify-content-center d-flex bg-secondary">
+            <button className="btn btn-secondary m-0 f-flex flex-fill no-wrap-btn flex-nowrap">
+              <i className="fa-solid fa-add"></i>
+              Add
+            </button>
+          </div>
+        </div> */}
+      </div>
       <div className="row mb-3 justify-content-left align-items-center">
         <div className="col-3 text-end me-0">
           <label htmlFor="assignments-group" className="form-label mb-0 align-self-center">
@@ -154,52 +246,6 @@ function AssignmentEditor() {
             <label className="form-check-label ps-2" htmlFor="checkbox1">
               File Uploads
             </label>
-          </div>
-        </div>
-      </div>
-
-      <div className="row mb-3 justify-content-left align-items-start">
-        <div className="col-3 text-end me-0">
-          <label htmlFor="assign-form" className="form-label mb-0 align-self-center">
-            Assign
-          </label>
-        </div>
-
-        <div className="col-6 border rounded-top px-3 py-3" id="assign-form">
-          <label htmlFor="assign-to" className="form-label fw-bold">
-            Assign to
-          </label>
-          <input type="text" className="form-control mb-3" id="assign-to" value="Everyone" />
-
-          <label htmlFor="due" className="form-label fw-bold">
-            Due
-          </label>
-          <input type="date" className="form-control mb-3" id="due" value="2023-09-18" />
-
-          <div className="row mb-3">
-            <div className="col-6 pe-1">
-              <label htmlFor="due" className="form-label fw-bold">
-                Available from
-              </label>
-              <input type="date" className="form-control" id="due" value="2023-09-06" />
-            </div>
-            <div className="col-6 ps-1">
-              <label htmlFor="due" className="form-label fw-bold">
-                Until
-              </label>
-              <input type="date" className="form-control" id="due" value="2023-09-18" />
-            </div>
-          </div>
-        </div>
-
-        <div className="row justify-content-left align-items-start px-0 m-0">
-          <div className="col-3 text-end"></div>
-
-          <div className="col-6 border p-0 rounded-bottom justify-content-center d-flex bg-secondary">
-            <button className="btn btn-secondary m-0 f-flex flex-fill no-wrap-btn flex-nowrap">
-              <i className="fa-solid fa-add"></i>
-              Add
-            </button>
           </div>
         </div>
       </div>

@@ -1,21 +1,56 @@
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
-import db from '../../Database'
+
+import { useSelector, useDispatch } from 'react-redux'
+import { deleteAssignment } from './assignmentsReducer'
+import { Button, OverlayTrigger, Popover, Modal } from 'react-bootstrap'
+
+const DeleteButton = ({ assignmentId }) => {
+  const [show, setShow] = useState(false)
+  const dispatch = useDispatch()
+
+  return (
+    <>
+      <OverlayTrigger
+        show={show}
+        onToggle={(nextShow) => setShow(nextShow)}
+        trigger="click"
+        overlay={
+          <Popover id="popover-basic">
+            <Popover.Header as="h3">Are you sure you want to remove the assignment?</Popover.Header>
+            <Popover.Body className="d-flex justify-content-around">
+              <Button
+                variant="danger"
+                size="sm"
+                onClick={() => {
+                  dispatch(deleteAssignment(assignmentId))
+                  setShow(false)
+                }}
+              >
+                Ok
+              </Button>
+              <Button size="sm" onClick={() => setShow(false)}>
+                Cancel
+              </Button>
+            </Popover.Body>
+          </Popover>
+        }
+      >
+        <Button variant="danger" size="sm">
+          Delete
+        </Button>
+      </OverlayTrigger>
+    </>
+  )
+}
 
 function Assignments() {
   const { courseId } = useParams()
-  const assignments = db.assignments
+  const assignments = useSelector((state) => state.assignmentsReducer.assignments)
+
   const courseAssignments = assignments.filter((assignment) => assignment.course === courseId)
   return (
     <div className="flex-column justify-content-center p-3 pt-0 flex-fill">
-      {/* <h2>Assignments for course {courseId}</h2>
-      <div className="list-group">
-        {courseAssignments.map((assignment) => (
-          <Link key={assignment._id} to={`/Kanbas/Courses/${courseId}/Assignments/${assignment._id}`} className="list-group-item">
-            {assignment.title}
-          </Link>
-        ))}
-      </div> */}
       <div className="d-flex float-start flex-nowrap w-25">
         <input type="text" className="form-control" id="search-for-assignment" placeholder="Search for Assignment" />
       </div>
@@ -26,10 +61,12 @@ function Assignments() {
           Group
         </button>
 
-        <button type="button" className="btn btn-danger btn-sm ms-1 no-wrap-btn">
-          <i className="fa-solid fa-plus"></i>
-          Modules
-        </button>
+        <Link to={`/Kanbas/Courses/${courseId}/Assignments/Editor`}>
+          <button type="button" className="btn btn-danger btn-sm ms-1 no-wrap-btn">
+            <i className="fa-solid fa-plus"></i>
+            Assignment
+          </button>
+        </Link>
 
         <span className="dropdown">
           <button
@@ -43,9 +80,7 @@ function Assignments() {
 
           <ul className="dropdown-menu">
             <li>
-              <a className="dropdown-item" href="#">
-                Edit Assignment Dates
-              </a>
+              <a className="dropdown-item">Edit Assignment Dates</a>
             </li>
           </ul>
         </span>
@@ -79,18 +114,26 @@ function Assignments() {
             <i className="fa-solid fa-book float-start no-wrap-btn" style={{ color: 'green' }}></i>
             <div className="flex-column flex-grow-1 ps-3">
               <div className="fw-bold assignment-title-link">
-                <Link to={`/Kanbas/Courses/${courseId}/Assignments/${assignment._id}`} className="assignment-title-link">
+                <Link to={`/Kanbas/Courses/${courseId}/Assignments/Editor/${assignment._id}`} className="assignment-title-link">
                   {assignment.title}
                 </Link>
               </div>
-              <div className="assignment-sub-font-style">Week 0 - SETUP - Week starting on Monday September 5th (9/5/2022) Module |</div>
               <div className="assignment-sub-font-style">
-                <span className="fw-bold">Due&nbsp;</span>Sep 18, 2022 at 11:59pm | 100pts
+                {assignment.description ?? 'Week 0 - SETUP - Week starting on Monday September 5th (9/5/2022) Module |'}
+              </div>
+              <div className="assignment-sub-font-style">
+                <span className="fw-bold">Due&nbsp;</span>
+                {assignment.dueDate ?? 'Sep 18, 2022 at 11:59pm | 100pts'}
               </div>
             </div>
             <span className="float-end no-wrap-btn">
               <i className="fa-solid fa-circle-check" style={{ color: '#9ec19a' }}></i>
               <i className="fa-solid fa-ellipsis-vertical"></i>
+
+              {/* <Button variant="danger" size="sm" onClick={() => dispatch(deleteAssignment(assignment._id))}>
+                Delete
+              </Button> */}
+              <DeleteButton assignmentId={assignment._id} />
             </span>
           </li>
         ))}
