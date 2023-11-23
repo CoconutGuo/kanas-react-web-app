@@ -1,5 +1,7 @@
-import db from '../../Kanbas/Database'
-import { Link, Navigate, Route, Routes, useParams, useLocation } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+
+import { Link, Navigate, Route, Routes, useParams } from 'react-router-dom'
 import CourseNavigation from './CourseNavigation'
 import Modules from './Modules'
 import Home from './Home'
@@ -7,10 +9,21 @@ import Assignments from './Assignment'
 import AssignmentEditor from './Assignment/AssignmentEditor'
 import Grades from './Grades'
 
-function Courses({ courses }) {
-  const { courseId, '*': link } = useParams()
+function Courses() {
+  const URL = 'http://localhost:4000/api/courses'
 
-  const course = courses.find((course) => course._id === courseId)
+  const { courseId, '*': link } = useParams()
+  const [course, setCourse] = useState({})
+
+  const findCourseById = async (courseId) => {
+    const response = await axios.get(`${URL}/${courseId}`)
+    setCourse(response.data)
+  }
+  useEffect(() => {
+    findCourseById(courseId)
+  }, [courseId])
+
+  // const course = courses.find((course) => course._id === courseId)
   return (
     <div>
       <div className="align-items-center flex-row flex-fill d-none d-lg-flex justify-content-center">
@@ -20,7 +33,7 @@ function Courses({ courses }) {
           <nav style={{ '--bs-breadcrumb-divider': "'>'" }} aria-label="breadcrumb" className="mb-0 ps-3">
             <ol className="breadcrumb m-0 flex-nowrap" id="breadcrumb-home-title">
               <li className="breadcrumb-item red-link no-wrap-btn">
-                <Link to="/Kanbas/Courses/Home/home" style={{ textDecoration: 'None' }} className="icon_red flex-nowrap d-flex">
+                <Link to="/Kanbas/Courses" style={{ textDecoration: 'None' }} className="icon_red flex-nowrap d-flex">
                   {course?.name}
                 </Link>
               </li>
@@ -38,15 +51,6 @@ function Courses({ courses }) {
       <hr className="d-none d-lg-block" />
       <div className="d-flex flex-row flex-fill">
         <CourseNavigation />
-
-        {/* <div>
-          <div
-            className="overflow-y-scroll position-fixed bottom-0 end-0"
-            style={{
-              left: '320px',
-              top: '50px',
-            }}
-          > */}
         <Routes>
           <Route path="/" element={<Navigate to="Home" />} />
           <Route path="Home" element={<Home />} />

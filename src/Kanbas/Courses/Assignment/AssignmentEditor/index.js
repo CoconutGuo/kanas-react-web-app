@@ -1,39 +1,25 @@
-import React, { useState, useEffect } from 'react'
+import React from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import db from '../../../Database'
 import { useSelector, useDispatch } from 'react-redux'
 import { addAssignment, updateAssignment, selectAssignment } from '../assignmentsReducer'
+import * as client from '../client'
 
 function AssignmentEditor() {
   const { courseId, assignmentId } = useParams()
-  // const assignment = db.assignments.find((assignment) => assignment._id === assignmentId) ?? {}
-  const assignments = useSelector((state) => state.assignmentsReducer.assignments)
   const assignment = useSelector((state) => state.assignmentsReducer.assignment)
   const dispatch = useDispatch()
 
   const navigate = useNavigate()
 
-  useEffect(() => {
-    const assignment = assignments.find((assignment) => assignment._id === assignmentId) ?? {
-      title: 'New Assignment',
-      description: 'New Assignment Description',
-      dueDate: '2023-09-18',
-      availableFromDate: '2023-09-06',
-      availableUntilDate: '2023-09-18',
-      course: 'RS101',
-    }
-    console.log('🚀 ~ file: index.js:18 ~ assignment ~ assignment:', assignment)
-
-    dispatch(selectAssignment(assignment))
-  }, [assignmentId, assignments, dispatch])
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (assignmentId) {
       // updateAssignment
+      await client.updateAssignment(assignment)
       dispatch(updateAssignment(assignment))
     } else {
       // addAssignment
-      dispatch(addAssignment(assignment))
+      const res = await client.createAssignment(courseId, assignment)
+      dispatch(addAssignment(res))
     }
     navigate(`/Kanbas/Courses/${courseId}/Assignments`)
   }
@@ -87,7 +73,6 @@ function AssignmentEditor() {
       <div className="mb-3">
         <textarea
           className="form-control"
-          // id="description"
           rows="5"
           value={assignment.description}
           onChange={(e) => dispatch(selectAssignment({ ...assignment, description: e.target.value }))}
@@ -113,60 +98,41 @@ function AssignmentEditor() {
         </div>
 
         <div className="col-6 border rounded px-3 py-3" id="assign-form">
-          {/* <label htmlFor="assign-to" className="form-label fw-bold">
-            Assign to
-          </label>
-          <input type="text" className="form-control mb-3" id="assign-to" value="Everyone" /> */}
-
-          <label htmlFor="due" className="form-label fw-bold">
+          <label className="form-label fw-bold">
             Due
+            <input
+              type="date"
+              className="form-control mb-3"
+              value={assignment.dueDate}
+              onChange={(e) => dispatch(selectAssignment({ ...assignment, dueDate: e.target.value }))}
+            />
           </label>
-          <input
-            type="date"
-            className="form-control mb-3"
-            id="due"
-            value={assignment.dueDate}
-            onChange={(e) => dispatch(selectAssignment({ ...assignment, dueDate: e.target.value }))}
-          />
 
           <div className="row mb-3">
             <div className="col-6 pe-1">
-              <label htmlFor="due" className="form-label fw-bold">
+              <label className="form-label fw-bold">
                 Available from
+                <input
+                  type="date"
+                  className="form-control"
+                  value={assignment.availableFromDate}
+                  onChange={(e) => dispatch(selectAssignment({ ...assignment, availableFromDate: e.target.value }))}
+                />
               </label>
-              <input
-                type="date"
-                className="form-control"
-                id="due"
-                value={assignment.availableFromDate}
-                onChange={(e) => dispatch(selectAssignment({ ...assignment, availableFromDate: e.target.value }))}
-              />
             </div>
             <div className="col-6 ps-1">
-              <label htmlFor="due" className="form-label fw-bold">
+              <label className="form-label fw-bold">
                 Until
+                <input
+                  type="date"
+                  className="form-control"
+                  value={assignment.availableUntilDate}
+                  onChange={(e) => dispatch(selectAssignment({ ...assignment, availableUntilDate: e.target.value }))}
+                />
               </label>
-              <input
-                type="date"
-                className="form-control"
-                id="due"
-                value={assignment.availableUntilDate}
-                onChange={(e) => dispatch(selectAssignment({ ...assignment, availableUntilDate: e.target.value }))}
-              />
             </div>
           </div>
         </div>
-
-        {/* <div className="row justify-content-left align-items-start px-0 m-0">
-          <div className="col-3 text-end"></div>
-
-          <div className="col-6 border p-0 rounded-bottom justify-content-center d-flex bg-secondary">
-            <button className="btn btn-secondary m-0 f-flex flex-fill no-wrap-btn flex-nowrap">
-              <i className="fa-solid fa-add"></i>
-              Add
-            </button>
-          </div>
-        </div> */}
       </div>
       <div className="row mb-3 justify-content-left align-items-center">
         <div className="col-3 text-end me-0">
@@ -198,8 +164,8 @@ function AssignmentEditor() {
         <div className="col-3 text-end"></div>
         <div className="col-9 px-0">
           <div className="form-check px-0 mb-0 no-wrap-btn">
-            <input className="form-check-input mx-0/" type="checkbox" id="checkbox1" />
-            <label className="form-check-label ps-2" htmlFor="checkbox1">
+            <label className="form-check-label ps-2">
+              <input className="form-check-input mx-0/" type="checkbox" />
               Do not count this assignment towards the final grade
             </label>
           </div>
@@ -218,33 +184,33 @@ function AssignmentEditor() {
           </select>
           <div className="mb-3 fw-bold">Online Entry Options</div>
           <div className="form-check px-0 mb-3">
-            <input className="form-check-input mx-0/" type="checkbox" id="checkbox1" checked />
-            <label className="form-check-label ps-2" htmlFor="checkbox1">
+            <label className="form-check-label ps-2">
               Text Entry
+              <input className="form-check-input mx-0/" type="checkbox" checked />
             </label>
           </div>
           <div className="form-check px-0 mb-3">
-            <input className="form-check-input mx-0/" type="checkbox" id="checkbox1" checked />
-            <label className="form-check-label ps-2" htmlFor="checkbox1">
+            <label className="form-check-label ps-2">
               Website URL
+              <input className="form-check-input mx-0/" type="checkbox" checked />
             </label>
           </div>
           <div className="form-check px-0 mb-3">
-            <input className="form-check-input mx-0/" type="checkbox" id="checkbox1" checked />
-            <label className="form-check-label ps-2" htmlFor="checkbox1">
+            <label className="form-check-label ps-2">
               Media Recordings
+              <input className="form-check-input mx-0/" type="checkbox" checked />
             </label>
           </div>
           <div className="form-check px-0 mb-3">
-            <input className="form-check-input mx-0/" type="checkbox" id="checkbox1" />
-            <label className="form-check-label ps-2" htmlFor="checkbox1">
+            <label className="form-check-label ps-2">
               Student Annotation
+              <input className="form-check-input mx-0/" type="checkbox" />
             </label>
           </div>
           <div className="form-check px-0 mb-0">
-            <input className="form-check-input mx-0/" type="checkbox" id="checkbox1" />
-            <label className="form-check-label ps-2" htmlFor="checkbox1">
+            <label className="form-check-label ps-2">
               File Uploads
+              <input className="form-check-input mx-0/" type="checkbox" />
             </label>
           </div>
         </div>
@@ -269,15 +235,6 @@ function AssignmentEditor() {
           </button>
         </div>
       </div>
-
-      {/* <h2>Assignment Name</h2>
-      <input value={assignment.title} className="form-control mb-2" //>
-      <Link to={`/Kanbas/Courses/${courseId}/Assignments`} className="btn btn-danger">
-        Cancel
-      </Link>
-      <button onClick={handleSave} className="btn btn-success me-2">
-        Save
-      </button> */}
     </div>
   )
 }

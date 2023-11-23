@@ -1,10 +1,11 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import db from '../../Database'
 import { Button, Form, Stack, Card } from 'react-bootstrap'
 
 import { useSelector, useDispatch } from 'react-redux'
-import { addModule, deleteModule, updateModule, setModule } from './modulesReducer'
+import { addModule, deleteModule, updateModule, setModule, setModules } from './modulesReducer'
+import * as client from './client'
 
 function ModuleList() {
   const { courseId } = useParams()
@@ -13,30 +14,26 @@ function ModuleList() {
   const module = useSelector((state) => state.modulesReducer.module)
   const dispatch = useDispatch()
 
-  // const modules = db.modules
-  // const [modules, setModules] = useState(db.modules)
-  // const [module, setModule] = useState({
-  //   name: 'New Module',
-  //   description: 'New Description',
-  //   course: courseId,
-  // })
-  // const addModule = (module) => {
-  //   setModules([{ ...module, _id: new Date().getTime().toString() }, ...modules])
-  // }
-  // const deleteModule = (moduleId) => {
-  //   setModules(modules.filter((module) => module._id !== moduleId))
-  // }
-  // const updateModule = () => {
-  //   setModules(
-  //     modules.map((m) => {
-  //       if (m._id === module._id) {
-  //         return module
-  //       } else {
-  //         return m
-  //       }
-  //     })
-  //   )
-  // }
+  useEffect(() => {
+    client.findModulesForCourse(courseId).then((modules) => dispatch(setModules(modules)))
+  }, [courseId])
+
+  const handleAddModule = () => {
+    client.createModule(courseId, module).then((module) => {
+      dispatch(addModule(module))
+    })
+  }
+
+  const handleDeleteModule = (moduleId) => {
+    client.deleteModule(moduleId).then((status) => {
+      dispatch(deleteModule(moduleId))
+    })
+  }
+
+  const handleUpdateModule = async () => {
+    const status = await client.updateModule(module)
+    dispatch(updateModule(module))
+  }
 
   return (
     <ul className="list-group">
@@ -52,29 +49,29 @@ function ModuleList() {
               onChange={(e) => dispatch(setModule({ ...module, description: e.target.value }))}
             />
           </div>
-          <Button variant="success" onClick={() => dispatch(addModule({ ...module, course: courseId }))}>
+          <Button variant="success" onClick={() => handleAddModule()}>
             Add
           </Button>
-          <Button onClick={() => dispatch(updateModule(module))}>Update</Button>
+          <Button onClick={() => handleUpdateModule()}>Update</Button>
         </Stack>
       </li>
       {modules
         .filter((module) => module.course === courseId)
-        .map((module, index) => (
+        .map((mod, index) => (
           <li key={index} className="list-group-item">
             <span className="d-flex align-items-center flex-fill flex-row justify-content-between">
-              <h3>{module.name}</h3>
+              <h3>{mod.name}</h3>
               <Stack direction="horizontal" gap={1}>
-                <Button variant="danger" onClick={() => dispatch(deleteModule(module._id))}>
+                <Button variant="danger" onClick={() => handleDeleteModule(mod._id)}>
                   Delete
                 </Button>
-                <Button variant="success" onClick={() => dispatch(setModule(module))}>
+                <Button variant="success" onClick={() => dispatch(setModule(mod))}>
                   Edit
                 </Button>
               </Stack>
             </span>
-            <p>{module.description}</p>
-            <p>{module._id}</p>
+            <p>{mod.description}</p>
+            <p>{mod._id}</p>
           </li>
         ))}
 

@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
-import db from './Database'
 import store from './store'
 import { Provider } from 'react-redux'
+import axios from 'axios'
 
 import KanbasNavigation from './KanbasNavigation'
 import Dashboard from './Dashboard'
@@ -15,30 +15,46 @@ import 'bootstrap/js/index.esm'
 import './index.css' // optionally import CSS files as needed
 
 function Kanbas() {
-  const [courses, setCourses] = useState(db.courses)
+  const [courses, setCourses] = useState([])
+  const URL = 'http://localhost:4000/api/courses'
+
   const [course, setCourse] = useState({
     name: 'New Course',
     number: 'New Number',
     startDate: '2023-09-10',
     endDate: '2023-12-15',
   })
-  const addNewCourse = () => {
-    setCourses([...courses, { ...course, _id: new Date().getTime() }])
-  }
-  const deleteCourse = (courseId) => {
-    setCourses(courses.filter((course) => course._id !== courseId))
-  }
-  const updateCourse = () => {
+
+  const updateCourse = async () => {
+    const response = await axios.put(`${URL}/${course._id}`, course)
     setCourses(
       courses.map((c) => {
         if (c._id === course._id) {
-          return course
-        } else {
-          return c
+          return response.data
         }
+        return c
       })
     )
+    setCourse({ name: '' })
   }
+
+  const deleteCourse = async (courseId) => {
+    const response = await axios.delete(`${URL}/${courseId}`)
+    setCourses(courses.filter((c) => c._id !== courseId))
+  }
+  const addNewCourse = async () => {
+    const response = await axios.post(URL, course)
+    setCourses([response.data, ...courses])
+    setCourse({ name: '' })
+  }
+  const findAllCourses = async () => {
+    const response = await axios.get(URL)
+    setCourses(response.data)
+  }
+  useEffect(() => {
+    findAllCourses()
+  }, [])
+
   return (
     <Provider store={store}>
       <div className="d-flex flex-row">
@@ -62,7 +78,7 @@ function Kanbas() {
                 }
               />
               <Route path="Courses" element={<Navigate to="RS101" />} />
-              <Route path="Courses/:courseId/*" element={<Courses courses={courses} />} />
+              <Route path="Courses/:courseId/*" element={<Courses />} />
             </Routes>
           </div>
         </KanbasNavigation>
